@@ -1,25 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import './styles.css'; // Import the CSS file
+import './styles.css'; 
 
 const availableRotations = [
-  'Rotation 1',
-  'Rotation 2',
-  'Rotation 3',
-  'Rotation 4',
-  'Rotation 5',
+  'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Prisma SPL',
+  'Prisma Tracking', 'Making Shipment Boxes', 'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen',
+  'Weights', 'TOUCH', 'Micro', 'Cyto', 'QFT',
+  'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'REF', 'Breath Bag/Novant/Pack up', 'PHC',
+  'Ref Match-Up', 'Floater', 'Biohazard', 'Clean Sweep', 'Imaging',
+  'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
 ];
 
 export default function Home() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [trainedRotations, setTrainedRotations] = useState('');
+  const [trainedRotations, setTrainedRotations] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch employees on component mount
   useEffect(() => {
     fetchEmployees();
   }, []);
@@ -32,22 +32,27 @@ export default function Home() {
       setEmployees(data);
       setLoading(false);
     } catch (err) {
+      console.error('Failed to load employees:', err);
       setError('Failed to load employees. Please try again later.');
       setLoading(false);
     }
   };
 
-  // Handle form submission to add a new employee
+  const handleRotationSelection = (rotation) => {
+    setTrainedRotations((prev) =>
+      prev.includes(rotation) ? prev.filter((r) => r !== rotation) : [...prev, rotation]
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Input validation
-    if (!firstName.trim() || !lastName.trim() || !trainedRotations.trim()) {
-      setError('Please provide first name, last name, and trained rotations.');
+    if (!firstName.trim() || !lastName.trim() || trainedRotations.length === 0) {
+      setError('Please provide first name, last name, and select at least one rotation.');
       return;
     }
 
-    setError(''); // Clear previous error
+    setError('');
     try {
       const response = await fetch('/api/addEmployee', {
         method: 'POST',
@@ -55,29 +60,27 @@ export default function Home() {
         body: JSON.stringify({
           firstName,
           lastName,
-          trainedRotations: trainedRotations.split(',').map((r) => r.trim()),
+          trainedRotations,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Refresh employee list after adding
         fetchEmployees();
-        // Clear the form
         setFirstName('');
         setLastName('');
-        setTrainedRotations('');
+        setTrainedRotations([]);
       } else {
         setError(data.message || 'Failed to add employee. Please try again.');
       }
     } catch (err) {
+      console.error('Something went wrong:', err);
       setError('Something went wrong. Please try again later.');
     }
   };
 
   const handleRotationChange = async (employeeId, rotation, checked) => {
-    // Update the local state for the employee
     const updatedEmployees = employees.map((emp) =>
       emp._id === employeeId
         ? {
@@ -89,8 +92,7 @@ export default function Home() {
         : emp
     );
     setEmployees(updatedEmployees);
-  
-    // Send PATCH request to update employee's trained rotations in the database
+
     try {
       const response = await fetch(`/api/updateEmployee/${employeeId}`, {
         method: 'PATCH',
@@ -99,9 +101,9 @@ export default function Home() {
           trainedRotations: updatedEmployees.find((emp) => emp._id === employeeId).trainedRotations,
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         console.log('Employee updated successfully:', data);
       } else {
@@ -116,7 +118,6 @@ export default function Home() {
     <div className="container">
       <h1 className="heading">Employee Rotation Assignment</h1>
 
-      {/* Add Employee Form */}
       <div className="form-container">
         <h2 className="form-title">Add Employee</h2>
         <form onSubmit={handleSubmit} className="form">
@@ -136,24 +137,28 @@ export default function Home() {
             className="input-field"
             required
           />
-          <input
-            type="text"
-            placeholder="Trained Rotations (comma-separated)"
-            value={trainedRotations}
-            onChange={(e) => setTrainedRotations(e.target.value)}
-            className="input-field"
-          />
-          <button
-            type="submit"
-            className="submit-button"
-          >
+
+          {/* 6x5 Grid Layout for New Employee Form */}
+          <div className="checkbox-grid">
+            {availableRotations.map((rotation) => (
+              <label key={rotation} className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={trainedRotations.includes(rotation)}
+                  onChange={() => handleRotationSelection(rotation)}
+                />
+                {rotation}
+              </label>
+            ))}
+          </div>
+
+          <button type="submit" className="submit-button">
             Add Employee
           </button>
         </form>
         {error && <p className="error-text">{error}</p>}
       </div>
 
-      {/* Display Employees */}
       <div>
         <h2 className="section-title">Employees</h2>
         {loading ? (
@@ -190,7 +195,7 @@ export default function Home() {
                 {employee.isDropdownOpen && (
                   <div className="rotation-list">
                     {availableRotations.map((rotation) => (
-                      <div key={rotation} className="rotation-item">
+                      <label key={rotation} className="checkbox-label">
                         <input
                           type="checkbox"
                           checked={employee.trainedRotations.includes(rotation)}
@@ -198,8 +203,8 @@ export default function Home() {
                             handleRotationChange(employee._id, rotation, e.target.checked)
                           }
                         />
-                        <label>{rotation}</label>
-                      </div>
+                        {rotation}
+                      </label>
                     ))}
                   </div>
                 )}
