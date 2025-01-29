@@ -1,6 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import './styles.css'; // Import the CSS file
+
+const availableRotations = [
+  'Rotation 1',
+  'Rotation 2',
+  'Rotation 3',
+  'Rotation 4',
+  'Rotation 5',
+];
 
 export default function Home() {
   const [firstName, setFirstName] = useState('');
@@ -67,20 +76,56 @@ export default function Home() {
     }
   };
 
+  const handleRotationChange = async (employeeId, rotation, checked) => {
+    // Update the local state for the employee
+    const updatedEmployees = employees.map((emp) =>
+      emp._id === employeeId
+        ? {
+            ...emp,
+            trainedRotations: checked
+              ? [...emp.trainedRotations, rotation]
+              : emp.trainedRotations.filter((r) => r !== rotation),
+          }
+        : emp
+    );
+    setEmployees(updatedEmployees);
+  
+    // Send PATCH request to update employee's trained rotations in the database
+    try {
+      const response = await fetch(`/api/updateEmployee/${employeeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trainedRotations: updatedEmployees.find((emp) => emp._id === employeeId).trainedRotations,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log('Employee updated successfully:', data);
+      } else {
+        console.error('Error updating employee:', data);
+      }
+    } catch (err) {
+      console.error('Failed to update rotations. Please try again later.', err);
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Employee Rotation Assignment</h1>
+    <div className="container">
+      <h1 className="heading">Employee Rotation Assignment</h1>
 
       {/* Add Employee Form */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Add Employee</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div className="form-container">
+        <h2 className="form-title">Add Employee</h2>
+        <form onSubmit={handleSubmit} className="form">
           <input
             type="text"
             placeholder="First Name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
+            className="input-field"
             required
           />
           <input
@@ -88,7 +133,7 @@ export default function Home() {
             placeholder="Last Name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
+            className="input-field"
             required
           />
           <input
@@ -96,28 +141,68 @@ export default function Home() {
             placeholder="Trained Rotations (comma-separated)"
             value={trainedRotations}
             onChange={(e) => setTrainedRotations(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
+            className="input-field"
           />
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="submit-button"
           >
             Add Employee
           </button>
         </form>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {error && <p className="error-text">{error}</p>}
       </div>
 
       {/* Display Employees */}
       <div>
-        <h2 className="text-xl font-semibold mb-2">Employees</h2>
+        <h2 className="section-title">Employees</h2>
         {loading ? (
           <p>Loading employees...</p>
         ) : employees.length > 0 ? (
-          <ul className="list-disc list-inside">
+          <ul className="employee-list">
             {employees.map((employee) => (
-              <li key={employee._id}>
-                <strong>{employee.firstName} {employee.lastName}</strong> - Trained Rotations: {employee.trainedRotations.join(', ')}
+              <li key={employee._id} className="employee-card">
+                <div className="employee-header">
+                  <strong>
+                    {employee.firstName} {employee.lastName}
+                  </strong>
+                  <button
+                    onClick={() =>
+                      setEmployees((prevEmployees) =>
+                        prevEmployees.map((emp) =>
+                          emp._id === employee._id
+                            ? { ...emp, isDropdownOpen: !emp.isDropdownOpen }
+                            : emp
+                        )
+                      )
+                    }
+                    className="dropdown-button"
+                  >
+                    <span
+                      className={`dropdown-icon ${
+                        employee.isDropdownOpen ? 'rotate' : ''
+                      }`}
+                    >
+                      ▼
+                    </span>
+                  </button>
+                </div>
+                {employee.isDropdownOpen && (
+                  <div className="rotation-list">
+                    {availableRotations.map((rotation) => (
+                      <div key={rotation} className="rotation-item">
+                        <input
+                          type="checkbox"
+                          checked={employee.trainedRotations.includes(rotation)}
+                          onChange={(e) =>
+                            handleRotationChange(employee._id, rotation, e.target.checked)
+                          }
+                        />
+                        <label>{rotation}</label>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>
