@@ -1,98 +1,247 @@
-/* styles.css */
-
 /* Container styles */
 .container {
-    @apply mx-auto p-4;
-  }
-  
-  /* Heading styles */
-  .heading {
-    @apply text-3xl font-bold mb-4;
-  }
-  
-  /* Form container styles */
-  .form-container {
-    @apply mb-6;
-  }
-  
-  .form-title {
-    @apply text-xl font-semibold mb-2;
-  }
-  
-  .form {
-    @apply flex flex-col gap-4;
-  }
-  
-  .input-field {
-    @apply p-3 border border-gray-300 rounded;
-  }
-  
-  .submit-button {
-    @apply bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600;
-  }
-  
-  .error-text {
-    @apply text-red-500 mt-2;
-  }
-  
-  /* Employee list styles */
-  .section-title {
-    @apply text-xl font-semibold mb-2;
-  }
-  
-  .employee-list {
-    @apply list-none; /* Remove bullet points */
-    @apply p-0; /* Remove any default padding */
-  }
-  
-  .employee-card {
-    @apply p-4 bg-blue-600 rounded-lg shadow-md mb-4 w-60;
-  }
-  
-  .employee-header {
-    @apply flex justify-between items-center;
-  }
-  
-  .dropdown-button {
-    @apply text-blue-500;
-  }
-  
-  .dropdown-icon {
-    @apply transition-transform transform;
-  }
-  
-  .dropdown-icon.rotate {
-    @apply rotate-180;
-  }
-  
-  .rotation-list {
-    @apply mt-2 pl-4;
-  }
-  
-  .rotation-item {
-    @apply flex items-center space-x-2;
-  }
-  
+  @apply mx-auto p-4;
+}
+
+/* Heading styles */
+.heading {
+  @apply text-3xl font-bold mb-4;
+}
+
+/* Form container styles */
+.form-container {
+  @apply mb-6;
+}
+
+.form-title {
+  @apply text-xl font-semibold mb-2;
+}
+
+.form {
+  @apply flex flex-col gap-4;
+}
+
+.input-field {
+  @apply p-3 border border-gray-300 rounded;
+}
+
+.submit-button {
+  @apply bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600;
+}
+
+.error-text {
+  @apply text-red-500 mt-2;
+}
+
+/* Employee list styles */
+.section-title {
+  @apply text-xl font-semibold mb-2;
+}
+
+.employee-list {
+  @apply list-none; /* Remove bullet points */
+  @apply p-0; /* Remove any default padding */
+}
+
+.employee-card {
+  @apply p-4 bg-blue-600 rounded-lg shadow-md mb-4 w-60;
+  position: relative; /* This ensures dropdowns are positioned relative to this container */
+}
+
+.employee-header {
+  @apply flex justify-between items-center;
+}
+
+.dropdown-button {
+  @apply text-blue-500;
+}
+
+.dropdown-icon {
+  @apply transition-transform transform;
+}
+
+.dropdown-icon.rotate {
+  @apply rotate-180;
+}
+
+.rotation-list {
+  @apply mt-2 pl-4;
+}
+
+.rotation-item {
+  @apply flex items-center space-x-2;
+}
+
 /* Grid layout for new employee checkboxes */
 .checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr); /* 6 columns */
-    gap: 10px;
-    margin-top: 10px;
-  }
-  
-  /* Vertical layout for employee dropdown checkboxes */
-  .rotation-list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    margin-top: 10px;
-  }
-  
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 14px;
-  }
-  
+  display: grid;
+  grid-template-columns: repeat(6, 1fr); /* 6 columns */
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Vertical layout for employee dropdown checkboxes */
+.rotation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+/* Assignment table styles */
+.assignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.assignment-table th,
+.assignment-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.assignment-table th {
+  background-color: #f4f4f4;
+}
+
+.assignment-table select {
+  width: 100%;
+  padding: 5px;
+  color: black;
+}
+
+/* Unassigned employees table styles */
+.unassigned-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.unassigned-table th,
+.unassigned-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.unassigned-table th {
+  background-color: #f4f4f4;
+}
+
+/* Additional styles for better spacing */
+.mb-6 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-10 {
+  margin-top: 2.5rem;
+}
+
+/* Ensure dropdowns are styled consistently */
+select {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px;
+  font-size: 14px;
+}
+
+/* Hover effect for buttons */
+button:hover {
+  opacity: 0.9;
+}
+
+/* Dropdown menu positioning */
+.dropdown-menu {
+  position: absolute;
+  top: 100%; /* Position it directly below the button */
+  right: 0;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10; /* Ensure dropdown appears above other elements */
+  padding: 10px;
+  border-radius: 5px;
+  display: none; /* Initially hidden */
+  width: auto; /* Ensure the dropdown doesn't affect layout width */
+}
+
+/* Show dropdown when hovering over the employee card */
+.employee-card:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu button {
+  background-color: transparent;
+  color: #333;
+  padding: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+.remove-employee {
+  color: red;
+}
+
+/* Custom positioning for dropdown */
+.employee-card {
+  position: relative; /* Ensure it has a relative positioning context */
+}
+
+.employee-card:hover .dropdown-menu {
+  display: block;
+}
+
+/* Ensure dropdown doesn't affect layout */
+.dropdown-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* Rotation list positioning */
+.rotation-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  margin-top: 2px;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+/* Rotation list items */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}

@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import './styles.css'; 
+import './styles.css';
+
+import { AddEmployeeForm } from './components/AddEmployeeForm';
+import { EmployeeList } from './components/EmployeeList';
+import { UnassignedEmployeesTable } from './components/UnassignedEmployeesTable';
+import { AssignmentGrid } from './components/AssignmentGrid';
 
 const availableRotations = [
   'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Prisma SPL',
@@ -12,6 +17,8 @@ const availableRotations = [
   'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
 ];
 
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
 export default function Home() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -19,6 +26,16 @@ export default function Home() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [assignments, setAssignments] = useState(() => {
+    const initialAssignments = {};
+    availableRotations.forEach(rotation => {
+      initialAssignments[rotation] = {};
+      daysOfWeek.forEach(day => {
+        initialAssignments[rotation][day] = '';
+      });
+    });
+    return initialAssignments;
+  });
 
   useEffect(() => {
     fetchEmployees();
@@ -114,107 +131,94 @@ export default function Home() {
     }
   };
 
+  const handleAssignmentChange = (rotation, day, employeeId) => {
+    setAssignments(prev => ({
+      ...prev,
+      [rotation]: {
+        ...prev[rotation],
+        [day]: employeeId
+      }
+    }));
+  };
+
+  const getUnassignedEmployees = () => {
+    const assignedEmployeeIds = new Set();
+    Object.values(assignments).forEach(rotation => {
+      Object.values(rotation).forEach(employeeId => {
+        if (employeeId) {
+          assignedEmployeeIds.add(employeeId);
+        }
+      });
+    });
+
+    return employees.filter(employee => !assignedEmployeeIds.has(employee._id));
+  };
+
+  const removeEmployee = async (employeeId) => {
+    try {
+      const response = await fetch(`/api/removeEmployee/${employeeId}`, {
+        method: 'DELETE',
+      });
+  
+      // Check if response is empty before parsing JSON
+      const text = await response.text(); // Get raw response text
+      console.log('Raw response:', text);
+  
+      if (!response.ok) {
+        console.error('Error removing employee:', text);
+        alert('Failed to remove employee. Please try again later.');
+        return;
+      }
+  
+      // Only parse JSON if there's content
+      const data = text ? JSON.parse(text) : {};
+      console.log('Employee removed:', data);
+  
+      // Update the state to remove the employee from the list
+      setEmployees((prevEmployees) =>
+        prevEmployees.filter((emp) => emp._id !== employeeId)
+      );
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Failed to remove employee. Please try again later.');
+    }
+  };
+  
   return (
     <div className="container">
       <h1 className="heading">Employee Rotation Assignment</h1>
 
-      <div className="form-container">
-        <h2 className="form-title">Add Employee</h2>
-        <form onSubmit={handleSubmit} className="form">
-          <input
-            type="text"
-            placeholder="First Name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            className="input-field"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Last Name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            className="input-field"
-            required
-          />
+      <AddEmployeeForm
+        firstName={firstName}
+        setFirstName={setFirstName}
+        lastName={lastName}
+        setLastName={setLastName}
+        trainedRotations={trainedRotations}
+        handleRotationSelection={handleRotationSelection}
+        handleSubmit={handleSubmit}
+        error={error}
+        availableRotations={availableRotations}
+      />
 
-          {/* 6x5 Grid Layout for New Employee Form */}
-          <div className="checkbox-grid">
-            {availableRotations.map((rotation) => (
-              <label key={rotation} className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={trainedRotations.includes(rotation)}
-                  onChange={() => handleRotationSelection(rotation)}
-                />
-                {rotation}
-              </label>
-            ))}
-          </div>
+      <EmployeeList
+        employees={employees}
+        setEmployees={setEmployees}
+        availableRotations={availableRotations}
+        handleRotationChange={handleRotationChange}
+        removeEmployee={removeEmployee} // Correctly passing removeEmployee prop
+      />
 
-          <button type="submit" className="submit-button">
-            Add Employee
-          </button>
-        </form>
-        {error && <p className="error-text">{error}</p>}
-      </div>
+      <UnassignedEmployeesTable
+        unassignedEmployees={getUnassignedEmployees()}
+      />
 
-      <div>
-        <h2 className="section-title">Employees</h2>
-        {loading ? (
-          <p>Loading employees...</p>
-        ) : employees.length > 0 ? (
-          <ul className="employee-list">
-            {employees.map((employee) => (
-              <li key={employee._id} className="employee-card">
-                <div className="employee-header">
-                  <strong>
-                    {employee.firstName} {employee.lastName}
-                  </strong>
-                  <button
-                    onClick={() =>
-                      setEmployees((prevEmployees) =>
-                        prevEmployees.map((emp) =>
-                          emp._id === employee._id
-                            ? { ...emp, isDropdownOpen: !emp.isDropdownOpen }
-                            : emp
-                        )
-                      )
-                    }
-                    className="dropdown-button"
-                  >
-                    <span
-                      className={`dropdown-icon ${
-                        employee.isDropdownOpen ? 'rotate' : ''
-                      }`}
-                    >
-                      ▼
-                    </span>
-                  </button>
-                </div>
-                {employee.isDropdownOpen && (
-                  <div className="rotation-list">
-                    {availableRotations.map((rotation) => (
-                      <label key={rotation} className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={employee.trainedRotations.includes(rotation)}
-                          onChange={(e) =>
-                            handleRotationChange(employee._id, rotation, e.target.checked)
-                          }
-                        />
-                        {rotation}
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No employees found.</p>
-        )}
-      </div>
+      <AssignmentGrid
+        assignments={assignments}
+        employees={employees}
+        availableRotations={availableRotations}
+        daysOfWeek={daysOfWeek}
+        handleAssignmentChange={handleAssignmentChange}
+      />
     </div>
   );
 }
