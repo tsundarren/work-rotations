@@ -3,10 +3,10 @@ import Employee from '@/models/Employee';
 
 export async function POST(req) {
   try {
-    const { firstName, lastName, trainedRotations } = await req.json();
+    const { firstName, lastName, trainedRotations, role } = await req.json();
 
     // Validate required fields
-    if (!firstName || !lastName || !trainedRotations || trainedRotations.length === 0) {
+    if (!firstName || !lastName || !trainedRotations || trainedRotations.length === 0 || !role) {
       return new Response(
         JSON.stringify({ message: 'Missing required fields' }),
         { status: 400 }
@@ -38,6 +38,7 @@ export async function POST(req) {
         firstName,
         lastName,
         trainedRotations,
+        role, // Save the role
       });
       await employee.save();
 

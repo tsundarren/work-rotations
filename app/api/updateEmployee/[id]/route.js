@@ -2,20 +2,28 @@ import { connectToDatabase } from '@/lib/mongoose';
 import Employee from '@/models/Employee';
 
 export async function PATCH(req, { params }) {
-  // Await the params before accessing the `id`
-  const { id } = await params; // Await params to prevent the sync issue
-  
+  const { id } = await params;
+
   try {
     // Connect to the database
     await connectToDatabase();
 
-    // Parse the request body to get the updated trained rotations
-    const { trainedRotations } = await req.json();
+    // Parse the request body to get the updated trained rotations and role
+    const { trainedRotations, role } = await req.json();
 
     // Validate input
-    if (!trainedRotations || trainedRotations.length === 0) {
+    const updates = {};
+    if (trainedRotations && trainedRotations.length > 0) {
+      updates.trainedRotations = trainedRotations;
+    }
+
+    if (role) {
+      updates.role = role; // Update role if provided
+    }
+
+    if (Object.keys(updates).length === 0) {
       return new Response(
-        JSON.stringify({ message: 'No rotations provided to update' }),
+        JSON.stringify({ message: 'No fields to update' }),
         { status: 400 }
       );
     }
@@ -23,7 +31,7 @@ export async function PATCH(req, { params }) {
     // Update the employee in the database
     const updatedEmployee = await Employee.findByIdAndUpdate(
       id, 
-      { trainedRotations }, 
+      updates, 
       { new: true } // This will return the updated employee
     );
 

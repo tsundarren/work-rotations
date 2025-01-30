@@ -44,7 +44,7 @@
 }
 
 .employee-card {
-  @apply p-4 bg-blue-600 rounded-lg shadow-md mb-4 w-60;
+  @apply p-4 rounded-lg shadow-md mb-4 w-60;
   position: relative; /* This ensures dropdowns are positioned relative to this container */
 }
 
