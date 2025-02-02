@@ -39,6 +39,7 @@ export async function POST(req) {
         lastName,
         trainedRotations,
         role, // Save the role
+        assignedRotations: [] // Initialize assignedRotations as an empty array
       });
       await employee.save();
 

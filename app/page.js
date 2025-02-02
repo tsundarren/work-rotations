@@ -23,7 +23,6 @@ export default function Home() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [trainedRotations, setTrainedRotations] = useState([]);
-  const [role, setRole] = useState('SPS'); // Default role set to 'SPS'
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -79,7 +78,6 @@ export default function Home() {
           firstName,
           lastName,
           trainedRotations,
-          role, // Pass role to backend
         }),
       });
 
@@ -90,7 +88,6 @@ export default function Home() {
         setFirstName('');
         setLastName('');
         setTrainedRotations([]);
-        setRole('SPS'); // Reset role to default
       } else {
         setError(data.message || 'Failed to add employee. Please try again.');
       }
@@ -162,21 +159,21 @@ export default function Home() {
       const response = await fetch(`/api/removeEmployee/${employeeId}`, {
         method: 'DELETE',
       });
-
+  
       // Check if response is empty before parsing JSON
       const text = await response.text(); // Get raw response text
       console.log('Raw response:', text);
-
+  
       if (!response.ok) {
         console.error('Error removing employee:', text);
         alert('Failed to remove employee. Please try again later.');
         return;
       }
-
+  
       // Only parse JSON if there's content
       const data = text ? JSON.parse(text) : {};
       console.log('Employee removed:', data);
-
+  
       // Update the state to remove the employee from the list
       setEmployees((prevEmployees) =>
         prevEmployees.filter((emp) => emp._id !== employeeId)
@@ -186,7 +183,7 @@ export default function Home() {
       alert('Failed to remove employee. Please try again later.');
     }
   };
-
+  
   return (
     <div className="container">
       <h1 className="heading">Employee Rotation Assignment</h1>
@@ -201,8 +198,6 @@ export default function Home() {
         handleSubmit={handleSubmit}
         error={error}
         availableRotations={availableRotations}
-        role={role}
-        setRole={setRole} // Pass the role state and setter to the form
       />
 
       <EmployeeList
