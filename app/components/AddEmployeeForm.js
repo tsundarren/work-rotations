@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 export const AddEmployeeForm = ({
   firstName,
   setFirstName,
@@ -8,9 +10,21 @@ export const AddEmployeeForm = ({
   handleSubmit,
   error,
   availableRotations,
-  role,
-  setRole, // New prop for setting the role
+  role: parentRole,
+  setRole: parentSetRole, // New prop for setting the role
 }) => {
+  // Set default role if parent role is not provided
+  const [role, setRole] = useState(parentRole || 'Specimen Accessioner');
+
+  // If parent passes setRole, we use it, otherwise we can use our own setRole
+  const handleRoleChange = (e) => {
+    const selectedRole = e.target.value;
+    setRole(selectedRole);
+    if (parentSetRole) {
+      parentSetRole(selectedRole); // Update the parent's role as well if necessary
+    }
+  };
+
   return (
     <div className="form-container">
       <h2 className="form-title">Add Employee</h2>
@@ -51,16 +65,16 @@ export const AddEmployeeForm = ({
           <select
             id="role"
             value={role}
-            onChange={(e) => setRole(e.target.value)}
+            onChange={handleRoleChange}
             className="input-field"
             required
           >
+            <option value="Specimen Accessioner">Specimen Accessioner</option>
+            <option value="SPS">SPS</option>
+            <option value="Senior SPS">Senior SPS</option>
             <option value="Team Lead">Team Lead</option>
             <option value="Team Lead Coordinator">Team Lead Coordinator</option>
             <option value="Supervisor">Supervisor</option>
-            <option value="SPS">SPS</option>
-            <option value="Senior SPS">Senior SPS</option>
-            <option value="Specimen Accessioner">Specimen Accessioner</option>
           </select>
         </div>
 

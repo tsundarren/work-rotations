@@ -26,6 +26,8 @@ export default function Home() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [role, setRole] = useState('');  // New role state
+
   const [assignments, setAssignments] = useState(() => {
     const initialAssignments = {};
     availableRotations.forEach(rotation => {
@@ -64,8 +66,9 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!firstName.trim() || !lastName.trim() || trainedRotations.length === 0) {
-      setError('Please provide first name, last name, and select at least one rotation.');
+    // Validate only first name and last name
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please provide first name and last name.');
       return;
     }
 
@@ -78,6 +81,7 @@ export default function Home() {
           firstName,
           lastName,
           trainedRotations,
+          role, // Role is optional, so we don't need to check it here
         }),
       });
 
@@ -88,6 +92,7 @@ export default function Home() {
         setFirstName('');
         setLastName('');
         setTrainedRotations([]);
+        setRole(''); // Reset role after submission if necessary
       } else {
         setError(data.message || 'Failed to add employee. Please try again.');
       }
@@ -183,7 +188,7 @@ export default function Home() {
       alert('Failed to remove employee. Please try again later.');
     }
   };
-  
+
   return (
     <div className="container">
       <h1 className="heading">Employee Rotation Assignment</h1>
@@ -198,6 +203,8 @@ export default function Home() {
         handleSubmit={handleSubmit}
         error={error}
         availableRotations={availableRotations}
+        role={role}         // Pass role state
+        setRole={setRole}   // Pass setRole function
       />
 
       <EmployeeList
