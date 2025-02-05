@@ -99,13 +99,17 @@ export default function Home() {
 
   const handleRotationChange = async (employeeId, rotation, checked) => {
     try {
+      const updatedEmployee = employees.find(emp => emp._id === employeeId);
+      const newTrainedRotations = checked
+        ? [...updatedEmployee.trainedRotations, rotation]
+        : updatedEmployee.trainedRotations.filter(r => r !== rotation);
+  
+      // If the new trained rotations array is empty, allow it to be empty
       const response = await fetch(`/api/updateEmployee/${employeeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          trainedRotations: checked
-            ? [...employees.find(emp => emp._id === employeeId).trainedRotations, rotation]
-            : employees.find(emp => emp._id === employeeId).trainedRotations.filter(r => r !== rotation),
+          trainedRotations: newTrainedRotations.length > 0 ? newTrainedRotations : [],
         }),
       });
   
@@ -117,6 +121,7 @@ export default function Home() {
       console.error('Failed to update rotations:', err);
     }
   };
+  
   
 
   const handleAssignmentChange = async (rotation, day, employeeId) => {

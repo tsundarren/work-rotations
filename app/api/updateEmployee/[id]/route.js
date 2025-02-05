@@ -13,7 +13,8 @@ export async function PATCH(req, { params }) {
 
     // Validate input
     const updates = {};
-    if (trainedRotations && trainedRotations.length > 0) {
+    // Allow for an empty trainedRotations array
+    if (trainedRotations !== undefined) {
       updates.trainedRotations = trainedRotations;
     }
 

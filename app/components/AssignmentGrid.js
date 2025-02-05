@@ -1,43 +1,72 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export const AssignmentGrid = ({ assignments, employees, availableRotations, daysOfWeek }) => {
-  const [updatedAssignments, setUpdatedAssignments] = useState(assignments);
+export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) => {
+  const [assignments, setAssignments] = useState({});
 
-  const handleAssignmentChange = async (rotation, day, employeeId) => {
-    // Update the state locally
-    const updatedAssignmentsCopy = { ...updatedAssignments };
-    updatedAssignmentsCopy[rotation][day] = employeeId;
+  // Fetch assignments when component mounts
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const response = await fetch('/api/getAssignments');
+        const data = await response.json();
 
-    // Update the local state
-    setUpdatedAssignments(updatedAssignmentsCopy);
-
-    // Prepare data to send to the backend
-    const updatedData = {
-      [rotation]: updatedAssignmentsCopy[rotation],
+        if (response.ok) {
+          const formattedAssignments = {};
+          data.forEach((assignment) => {
+            formattedAssignments[assignment.rotation] = {
+              Monday: assignment.Monday.map((emp) => emp._id),
+              Tuesday: assignment.Tuesday.map((emp) => emp._id),
+              Wednesday: assignment.Wednesday.map((emp) => emp._id),
+              Thursday: assignment.Thursday.map((emp) => emp._id),
+              Friday: assignment.Friday.map((emp) => emp._id),
+            };
+          });
+          setAssignments(formattedAssignments);
+        }
+      } catch (error) {
+        console.error('Error fetching assignments:', error);
+      }
     };
 
-    // Debugging: Log the payload
-    console.log('Sending data to backend:', updatedData);
+    fetchAssignments();
+  }, []);
 
-    // Send the updated assignments to the backend
+  // Handle assignment changes and send updated data to the backend
+  const handleAssignmentChange = async (rotation, day, employeeId) => {
+    // Update state locally
+    setAssignments((prev) => ({
+      ...prev,
+      [rotation]: {
+        ...prev[rotation],
+        [day]: employeeId,
+      },
+    }));
+
+    // Prepare updated data
+    const updatedData = {
+      [rotation]: {
+        ...assignments[rotation],
+        [day]: employeeId,
+      },
+    };
+
     try {
+      // Send the updated data to the backend
       const response = await fetch(`/api/assignments/${rotation}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ assignments: updatedData }),  // Ensure the body is correct
+        body: JSON.stringify({ assignments: updatedData }),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        console.log('Assignments updated successfully:', data);
+        console.log('Assignments updated successfully');
       } else {
-        console.error('Failed to update assignments:', data);
+        console.error('Failed to update assignments');
       }
-    } catch (err) {
-      console.error('Error updating assignments:', err);
+    } catch (error) {
+      console.error('Error updating assignments:', error);
     }
   };
 
@@ -60,7 +89,7 @@ export const AssignmentGrid = ({ assignments, employees, availableRotations, day
               {daysOfWeek.map((day) => (
                 <td key={day}>
                   <select
-                    value={updatedAssignments[rotation][day]}
+                    value={assignments[rotation]?.[day] || ''}
                     onChange={(e) => handleAssignmentChange(rotation, day, e.target.value)}
                   >
                     <option value="">Select Employee</option>
