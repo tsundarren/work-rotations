@@ -2,7 +2,7 @@ import { connectToDatabase } from '@/lib/mongoose';
 import Employee from '@/models/Employee';
 
 export async function GET() {
-  await connectToDatabase(); // Ensure DB is connected
+  await connectToDatabase();
 
   try {
     const employees = await Employee.find({});
