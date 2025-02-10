@@ -1,10 +1,10 @@
 import { connectToDatabase } from '@/lib/mongoose';
 import Assignment from '@/models/Assignment';
-import Employee from '@/models/Employee'; // Import the Employee model
+import Employee from '@/models/Employee';
 
 export async function PATCH(req, { params }) {
-  const { rotation } = await params;
-  const { assignments } = await req.json();  // Get the updated assignments from the request body
+  const { rotation } = params;
+  const { assignments } = await req.json();
 
   try {
     // Connect to the database
@@ -15,29 +15,36 @@ export async function PATCH(req, { params }) {
       { rotation },
       {
         $set: {
-          'Monday': assignments[rotation]?.Monday || [],
-          'Tuesday': assignments[rotation]?.Tuesday || [],
-          'Wednesday': assignments[rotation]?.Wednesday || [],
-          'Thursday': assignments[rotation]?.Thursday || [],
-          'Friday': assignments[rotation]?.Friday || [],
+          Monday: assignments[rotation]?.Monday || [],
+          Tuesday: assignments[rotation]?.Tuesday || [],
+          Wednesday: assignments[rotation]?.Wednesday || [],
+          Thursday: assignments[rotation]?.Thursday || [],
+          Friday: assignments[rotation]?.Friday || [],
         },
       },
       { new: true, upsert: true }
     );
 
-    // If the assignment was successfully updated, update the employees' assigned rotations
     if (updatedAssignment) {
-      // For each day in the assignment, update the assigned rotations for the employee
+      // Get all assigned employees for this rotation across all days
+      const assignedEmployees = new Set();
+      Object.values(assignments[rotation]).forEach((employeeId) => {
+        if (employeeId) assignedEmployees.add(employeeId);
+      });
+
+      // Remove the rotation from employees who are no longer assigned
+      await Employee.updateMany(
+        { assignedRotations: rotation, _id: { $nin: Array.from(assignedEmployees) } },
+        { $pull: { assignedRotations: rotation } }
+      );
+
+      // Add the rotation to assigned employees
       for (const day in assignments[rotation]) {
         const employeeId = assignments[rotation][day];
         if (employeeId) {
-          // Update the employee's assigned rotations
-          await Employee.findByIdAndUpdate(
-            employeeId,
-            {
-              $addToSet: { assignedRotations: rotation }, // Ensure the rotation is added only once
-            }
-          );
+          await Employee.findByIdAndUpdate(employeeId, {
+            $addToSet: { assignedRotations: rotation },
+          });
         }
       }
     }
