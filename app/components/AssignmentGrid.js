@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setUnassignedEmployees }) => {
   const [assignments, setAssignments] = useState({});
 
-  // Update unassigned employees after a page refresh or when assignments change
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
@@ -11,31 +10,9 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
         const data = await response.json();
 
         if (response.ok) {
-          const formattedAssignments = {};
-          data.forEach((assignment) => {
-            formattedAssignments[assignment.rotation] = {
-              Monday: assignment.Monday.map((emp) => emp._id),
-              Tuesday: assignment.Tuesday.map((emp) => emp._id),
-              Wednesday: assignment.Wednesday.map((emp) => emp._id),
-              Thursday: assignment.Thursday.map((emp) => emp._id),
-              Friday: assignment.Friday.map((emp) => emp._id),
-            };
-          });
+          const formattedAssignments = formatAssignments(data);
           setAssignments(formattedAssignments);
-
-          // **Step: Calculate unassigned employees**
-          const assignedEmployeeIds = new Set();
-          Object.values(formattedAssignments).forEach((dayAssignments) => {
-            Object.values(dayAssignments).forEach((employeeIds) => {
-              employeeIds.forEach((id) => assignedEmployeeIds.add(id));
-            });
-          });
-
-          const unassignedEmployees = employees.filter(
-            (employee) => !assignedEmployeeIds.has(employee._id)
-          );
-
-          setUnassignedEmployees(unassignedEmployees);
+          updateUnassignedEmployees(formattedAssignments);
         }
       } catch (error) {
         console.error('Error fetching assignments:', error);
@@ -45,12 +22,36 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
     fetchAssignments();
   }, [employees, setUnassignedEmployees]);
 
-  // Handle assigning or unassigning an employee
+  const formatAssignments = (data) => {
+    const formatted = {};
+    data.forEach((assignment) => {
+      formatted[assignment.rotation] = daysOfWeek.reduce((acc, day) => {
+        acc[day] = assignment[day].map((emp) => emp._id);
+        return acc;
+      }, {});
+    });
+    return formatted;
+  };
+
+  const updateUnassignedEmployees = (formattedAssignments) => {
+    const assignedEmployeeIds = new Set();
+    Object.values(formattedAssignments).forEach((dayAssignments) => {
+      Object.values(dayAssignments).forEach((employeeIds) => {
+        employeeIds.forEach((id) => assignedEmployeeIds.add(id));
+      });
+    });
+
+    const unassignedEmployees = employees.filter(
+      (employee) => !assignedEmployeeIds.has(employee._id)
+    );
+    setUnassignedEmployees(unassignedEmployees);
+  };
+
   const handleAssignmentChange = async (rotation, day, employeeId) => {
     const previousAssignments = { ...assignments };
     const prevEmployeeId = assignments[rotation]?.[day];
 
-    // Optimistically update assignments
+    // Optimistic UI update
     setAssignments((prev) => ({
       ...prev,
       [rotation]: {
@@ -59,25 +60,8 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
       },
     }));
 
-    // Optimistically update unassigned employees list
-    setUnassignedEmployees((prevEmployees) => {
-      let updatedEmployees = [...prevEmployees];
+    setUnassignedEmployees(updateUnassignedEmployeeList(employeeId, prevEmployeeId));
 
-      if (employeeId) {
-        // If employee is assigned, remove them from the unassigned list
-        updatedEmployees = updatedEmployees.filter((emp) => emp._id !== employeeId);
-      }
-
-      if (prevEmployeeId && prevEmployeeId !== employeeId) {
-        // If there was a previous employee assigned, add them back
-        const prevEmployee = employees.find((emp) => emp._id === prevEmployeeId);
-        if (prevEmployee) updatedEmployees.push(prevEmployee);
-      }
-
-      return updatedEmployees;
-    });
-
-    // Update the backend with new assignments
     const updatedData = {
       [rotation]: {
         ...assignments[rotation],
@@ -94,58 +78,42 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
         body: JSON.stringify({ assignments: updatedData }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update assignments');
-      }
+      if (!response.ok) throw new Error('Failed to update assignments');
 
-      // Re-fetch the assignments and unassigned employees after a successful update
-      const updatedAssignmentsResponse = await fetch('/api/getAssignments');
-      const updatedAssignmentsData = await updatedAssignmentsResponse.json();
-      if (updatedAssignmentsResponse.ok) {
-        const formattedAssignments = {};
-        updatedAssignmentsData.forEach((assignment) => {
-          formattedAssignments[assignment.rotation] = {
-            Monday: assignment.Monday.map((emp) => emp._id),
-            Tuesday: assignment.Tuesday.map((emp) => emp._id),
-            Wednesday: assignment.Wednesday.map((emp) => emp._id),
-            Thursday: assignment.Thursday.map((emp) => emp._id),
-            Friday: assignment.Friday.map((emp) => emp._id),
-          };
-        });
-
-        setAssignments(formattedAssignments);
-
-        const assignedEmployeeIds = new Set();
-        Object.values(formattedAssignments).forEach((dayAssignments) => {
-          Object.values(dayAssignments).forEach((employeeIds) => {
-            employeeIds.forEach((id) => assignedEmployeeIds.add(id));
-          });
-        });
-
-        const unassignedEmployees = employees.filter(
-          (employee) => !assignedEmployeeIds.has(employee._id)
-        );
-
-        setUnassignedEmployees(unassignedEmployees);
-      }
+      const updatedAssignmentsData = await fetchAssignmentsFromAPI();
+      const formattedAssignments = formatAssignments(updatedAssignmentsData);
+      setAssignments(formattedAssignments);
+      updateUnassignedEmployees(formattedAssignments);
     } catch (error) {
       console.error('Error updating assignments:', error);
       setAssignments(previousAssignments);
-      setUnassignedEmployees((prevEmployees) => {
-        let updatedEmployees = [...prevEmployees];
-
-        if (employeeId) {
-          const assignedEmployee = employees.find((emp) => emp._id === employeeId);
-          if (assignedEmployee) updatedEmployees.push(assignedEmployee);
-        }
-
-        if (prevEmployeeId) {
-          updatedEmployees = updatedEmployees.filter((emp) => emp._id !== prevEmployeeId);
-        }
-
-        return updatedEmployees;
-      });
+      setUnassignedEmployees(updateUnassignedEmployeeList(employeeId, prevEmployeeId, true));
     }
+  };
+
+  const updateUnassignedEmployeeList = (employeeId, prevEmployeeId, revert = false) => {
+    let updatedEmployees = [...employees];
+
+    if (employeeId) {
+      updatedEmployees = updatedEmployees.filter((emp) => emp._id !== employeeId);
+    }
+
+    if (prevEmployeeId && prevEmployeeId !== employeeId) {
+      const prevEmployee = employees.find((emp) => emp._id === prevEmployeeId);
+      if (prevEmployee) updatedEmployees.push(prevEmployee);
+    }
+
+    if (revert && prevEmployeeId) {
+      updatedEmployees = updatedEmployees.filter((emp) => emp._id !== prevEmployeeId);
+    }
+
+    return updatedEmployees;
+  };
+
+  const fetchAssignmentsFromAPI = async () => {
+    const response = await fetch('/api/getAssignments');
+    const data = await response.json();
+    return data;
   };
 
   return (

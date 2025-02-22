@@ -11,72 +11,40 @@ export const AddEmployeeForm = ({
   error,
   availableRotations,
   role: parentRole,
-  setRole: parentSetRole, // New prop for setting the role
+  setRole: parentSetRole,
 }) => {
-  // Set default role if parent role is not provided
+  // Default role is 'Specimen Accessioner' if parentRole is not provided
   const [role, setRole] = useState(parentRole || 'Specimen Accessioner');
 
-  // If parent passes setRole, we use it, otherwise we can use our own setRole
+  // Handle role change and propagate to parent if necessary
   const handleRoleChange = (e) => {
     const selectedRole = e.target.value;
     setRole(selectedRole);
-    if (parentSetRole) {
-      parentSetRole(selectedRole); // Update the parent's role as well if necessary
-    }
+    parentSetRole && parentSetRole(selectedRole); // Update parent role if setRole is provided
   };
 
   return (
     <div className="form-container">
       <h2 className="form-title">Add Employee</h2>
       <form onSubmit={handleSubmit} className="form">
-        <input
-          type="text"
-          placeholder="First Name"
+        <InputField
           value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className="input-field"
-          required
+          setValue={setFirstName}
+          placeholder="First Name"
         />
-        <input
-          type="text"
-          placeholder="Last Name"
+        <InputField
           value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className="input-field"
-          required
+          setValue={setLastName}
+          placeholder="Last Name"
         />
 
-        <div className="checkbox-grid">
-          {availableRotations.map((rotation) => (
-            <label key={rotation} className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={trainedRotations.includes(rotation)}
-                onChange={() => handleRotationSelection(rotation)}
-              />
-              {rotation}
-            </label>
-          ))}
-        </div>
+        <RotationCheckboxes
+          availableRotations={availableRotations}
+          trainedRotations={trainedRotations}
+          handleRotationSelection={handleRotationSelection}
+        />
 
-        {/* Role Dropdown */}
-        <div className="role-dropdown">
-          <label htmlFor="role" className="role-label">Role:</label>
-          <select
-            id="role"
-            value={role}
-            onChange={handleRoleChange}
-            className="input-field"
-            required
-          >
-            <option value="Specimen Accessioner">Specimen Accessioner</option>
-            <option value="SPS">SPS</option>
-            <option value="Senior SPS">Senior SPS</option>
-            <option value="Team Lead">Team Lead</option>
-            <option value="Team Lead Coordinator">Team Lead Coordinator</option>
-            <option value="Supervisor">Supervisor</option>
-          </select>
-        </div>
+        <RoleDropdown role={role} handleRoleChange={handleRoleChange} />
 
         <button type="submit" className="submit-button">
           Add Employee
@@ -86,3 +54,52 @@ export const AddEmployeeForm = ({
     </div>
   );
 };
+
+// Reusable InputField component
+const InputField = ({ value, setValue, placeholder }) => (
+  <input
+    type="text"
+    placeholder={placeholder}
+    value={value}
+    onChange={(e) => setValue(e.target.value)}
+    className="input-field"
+    required
+  />
+);
+
+// Reusable RotationCheckboxes component
+const RotationCheckboxes = ({ availableRotations, trainedRotations, handleRotationSelection }) => (
+  <div className="checkbox-grid">
+    {availableRotations.map((rotation) => (
+      <label key={rotation} className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={trainedRotations.includes(rotation)}
+          onChange={() => handleRotationSelection(rotation)}
+        />
+        {rotation}
+      </label>
+    ))}
+  </div>
+);
+
+// Reusable RoleDropdown component
+const RoleDropdown = ({ role, handleRoleChange }) => (
+  <div className="role-dropdown">
+    <label htmlFor="role" className="role-label">Role:</label>
+    <select
+      id="role"
+      value={role}
+      onChange={handleRoleChange}
+      className="input-field"
+      required
+    >
+      <option value="Specimen Accessioner">Specimen Accessioner</option>
+      <option value="SPS">SPS</option>
+      <option value="Senior SPS">Senior SPS</option>
+      <option value="Team Lead">Team Lead</option>
+      <option value="Team Lead Coordinator">Team Lead Coordinator</option>
+      <option value="Supervisor">Supervisor</option>
+    </select>
+  </div>
+);

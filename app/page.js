@@ -9,12 +9,10 @@ import { UnassignedEmployeesTable } from './components/UnassignedEmployeesTable'
 import { AssignmentGrid } from './components/AssignmentGrid';
 
 const availableRotations = [
-  'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Prisma SPL',
-  'Prisma Tracking', 'Making Shipment Boxes', 'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen',
-  'Weights', 'TOUCH', 'Micro', 'Cyto', 'QFT',
-  'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'REF', 'Breath Bag/Novant/Pack up', 'PHC',
-  'Ref Match-Up', 'Floater', 'Biohazard', 'Clean Sweep', 'Imaging',
-  'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
+  'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Prisma SPL', 'Prisma Tracking', 'Making Shipment Boxes', 
+  'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen', 'Weights', 'TOUCH', 'Micro', 'Cyto', 'QFT', 
+  'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'REF', 'Breath Bag/Novant/Pack up', 'PHC', 'Ref Match-Up', 'Floater', 
+  'Biohazard', 'Clean Sweep', 'Imaging', 'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
 ];
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -28,17 +26,19 @@ export default function Home() {
   const [error, setError] = useState('');
   const [role, setRole] = useState('');
   const [unassignedEmployees, setUnassignedEmployees] = useState([]);
+  const [assignments, setAssignments] = useState(getInitialAssignments);
 
-  const [assignments, setAssignments] = useState(() => {
+  // Helper function to get initial assignments structure
+  function getInitialAssignments() {
     const initialAssignments = {};
     availableRotations.forEach(rotation => {
-      initialAssignments[rotation] = {};
-      daysOfWeek.forEach(day => {
-        initialAssignments[rotation][day] = '';
-      });
+      initialAssignments[rotation] = daysOfWeek.reduce((acc, day) => {
+        acc[day] = '';
+        return acc;
+      }, {});
     });
     return initialAssignments;
-  });
+  }
 
   useEffect(() => {
     fetchEmployees();
@@ -54,10 +54,10 @@ export default function Home() {
       const res = await fetch('/api/getEmployees');
       const data = await res.json();
       setEmployees(data);
-      setLoading(false);
     } catch (err) {
       console.error('Failed to load employees:', err);
       setError('Failed to load employees. Please try again later.');
+    } finally {
       setLoading(false);
     }
   };
@@ -69,14 +69,13 @@ export default function Home() {
         if (empId) assignedEmployeeIds.add(empId);
       })
     );
-
     setUnassignedEmployees(employees.filter(emp => !assignedEmployeeIds.has(emp._id)));
   };
 
   const handleRotationSelection = (rotation) => {
-    setTrainedRotations(prev =>
+    setTrainedRotations(prev => (
       prev.includes(rotation) ? prev.filter(r => r !== rotation) : [...prev, rotation]
-    );
+    ));
   };
 
   const handleSubmit = async (e) => {
@@ -115,13 +114,11 @@ export default function Home() {
         ? [...updatedEmployee.trainedRotations, rotation]
         : updatedEmployee.trainedRotations.filter(r => r !== rotation);
 
-      const response = await fetch(`/api/updateEmployee/${employeeId}`, {
+      await fetch(`/api/updateEmployee/${employeeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ trainedRotations: newTrainedRotations }),
       });
-
-      if (!response.ok) throw new Error('Failed to update employee.');
       fetchEmployees();
     } catch (err) {
       console.error('Failed to update rotations:', err);
@@ -158,7 +155,6 @@ export default function Home() {
 
       if (!response.ok) throw new Error('Failed to update assignment');
 
-      // After successful assignment update, re-calculate unassigned employees
       updateUnassignedEmployees();
     } catch (err) {
       console.error('Error updating assignment:', err);
@@ -170,13 +166,8 @@ export default function Home() {
   const removeEmployee = async (employeeId) => {
     try {
       const response = await fetch(`/api/removeEmployee/${employeeId}`, { method: 'DELETE' });
-      const text = await response.text();
-      if (!response.ok) {
-        console.error('Error removing employee:', text);
-        alert('Failed to remove employee. Please try again later.');
-        return;
-      }
-      setEmployees(prevEmployees => prevEmployees.filter(emp => emp._id !== employeeId));
+      if (!response.ok) throw new Error('Failed to remove employee.');
+      setEmployees(prev => prev.filter(emp => emp._id !== employeeId));
       updateUnassignedEmployees();
     } catch (err) {
       console.error('Error:', err);

@@ -1,6 +1,20 @@
 import React from "react";
 
 export const UnassignedEmployeesTable = ({ unassignedEmployees }) => {
+  const renderUnassignedEmployees = () => {
+    return unassignedEmployees.length > 0 ? (
+      unassignedEmployees.map((employee) => (
+        <tr key={employee._id}>
+          <td>{employee.firstName} {employee.lastName}</td>
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td>No unassigned employees</td>
+      </tr>
+    );
+  };
+
   return (
     <div>
       <h2 className="section-title">Unassigned Employees</h2>
@@ -11,17 +25,7 @@ export const UnassignedEmployeesTable = ({ unassignedEmployees }) => {
           </tr>
         </thead>
         <tbody>
-          {unassignedEmployees.length > 0 ? (
-            unassignedEmployees.map((employee) => (
-              <tr key={employee._id}>
-                <td>{employee.firstName} {employee.lastName}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td>No unassigned employees</td>
-            </tr>
-          )}
+          {renderUnassignedEmployees()}
         </tbody>
       </table>
     </div>
