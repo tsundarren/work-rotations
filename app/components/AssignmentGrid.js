@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 
-export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) => {
+export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setUnassignedEmployees }) => {
   const [assignments, setAssignments] = useState({});
 
-  // Fetch assignments when component mounts
+  // Update unassigned employees after a page refresh or when assignments change
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
@@ -22,6 +22,20 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) =>
             };
           });
           setAssignments(formattedAssignments);
+
+          // **Step: Calculate unassigned employees**
+          const assignedEmployeeIds = new Set();
+          Object.values(formattedAssignments).forEach((dayAssignments) => {
+            Object.values(dayAssignments).forEach((employeeIds) => {
+              employeeIds.forEach((id) => assignedEmployeeIds.add(id));
+            });
+          });
+
+          const unassignedEmployees = employees.filter(
+            (employee) => !assignedEmployeeIds.has(employee._id)
+          );
+
+          setUnassignedEmployees(unassignedEmployees);
         }
       } catch (error) {
         console.error('Error fetching assignments:', error);
@@ -29,20 +43,41 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) =>
     };
 
     fetchAssignments();
-  }, []);
+  }, [employees, setUnassignedEmployees]);
 
-  // Handle assignment changes and send updated data to the backend
+  // Handle assigning or unassigning an employee
   const handleAssignmentChange = async (rotation, day, employeeId) => {
-    // Update state locally
+    const previousAssignments = { ...assignments };
+    const prevEmployeeId = assignments[rotation]?.[day];
+
+    // Optimistically update assignments
     setAssignments((prev) => ({
       ...prev,
       [rotation]: {
         ...prev[rotation],
-        [day]: employeeId,
+        [day]: employeeId || '',
       },
     }));
 
-    // Prepare updated data
+    // Optimistically update unassigned employees list
+    setUnassignedEmployees((prevEmployees) => {
+      let updatedEmployees = [...prevEmployees];
+
+      if (employeeId) {
+        // If employee is assigned, remove them from the unassigned list
+        updatedEmployees = updatedEmployees.filter((emp) => emp._id !== employeeId);
+      }
+
+      if (prevEmployeeId && prevEmployeeId !== employeeId) {
+        // If there was a previous employee assigned, add them back
+        const prevEmployee = employees.find((emp) => emp._id === prevEmployeeId);
+        if (prevEmployee) updatedEmployees.push(prevEmployee);
+      }
+
+      return updatedEmployees;
+    });
+
+    // Update the backend with new assignments
     const updatedData = {
       [rotation]: {
         ...assignments[rotation],
@@ -51,7 +86,6 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) =>
     };
 
     try {
-      // Send the updated data to the backend
       const response = await fetch(`/api/assignments/${rotation}`, {
         method: 'PATCH',
         headers: {
@@ -60,13 +94,57 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) =>
         body: JSON.stringify({ assignments: updatedData }),
       });
 
-      if (response.ok) {
-        console.log('Assignments updated successfully');
-      } else {
-        console.error('Failed to update assignments');
+      if (!response.ok) {
+        throw new Error('Failed to update assignments');
+      }
+
+      // Re-fetch the assignments and unassigned employees after a successful update
+      const updatedAssignmentsResponse = await fetch('/api/getAssignments');
+      const updatedAssignmentsData = await updatedAssignmentsResponse.json();
+      if (updatedAssignmentsResponse.ok) {
+        const formattedAssignments = {};
+        updatedAssignmentsData.forEach((assignment) => {
+          formattedAssignments[assignment.rotation] = {
+            Monday: assignment.Monday.map((emp) => emp._id),
+            Tuesday: assignment.Tuesday.map((emp) => emp._id),
+            Wednesday: assignment.Wednesday.map((emp) => emp._id),
+            Thursday: assignment.Thursday.map((emp) => emp._id),
+            Friday: assignment.Friday.map((emp) => emp._id),
+          };
+        });
+
+        setAssignments(formattedAssignments);
+
+        const assignedEmployeeIds = new Set();
+        Object.values(formattedAssignments).forEach((dayAssignments) => {
+          Object.values(dayAssignments).forEach((employeeIds) => {
+            employeeIds.forEach((id) => assignedEmployeeIds.add(id));
+          });
+        });
+
+        const unassignedEmployees = employees.filter(
+          (employee) => !assignedEmployeeIds.has(employee._id)
+        );
+
+        setUnassignedEmployees(unassignedEmployees);
       }
     } catch (error) {
       console.error('Error updating assignments:', error);
+      setAssignments(previousAssignments);
+      setUnassignedEmployees((prevEmployees) => {
+        let updatedEmployees = [...prevEmployees];
+
+        if (employeeId) {
+          const assignedEmployee = employees.find((emp) => emp._id === employeeId);
+          if (assignedEmployee) updatedEmployees.push(assignedEmployee);
+        }
+
+        if (prevEmployeeId) {
+          updatedEmployees = updatedEmployees.filter((emp) => emp._id !== prevEmployeeId);
+        }
+
+        return updatedEmployees;
+      });
     }
   };
 

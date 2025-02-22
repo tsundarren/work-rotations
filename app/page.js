@@ -27,6 +27,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [role, setRole] = useState('');
+  const [unassignedEmployees, setUnassignedEmployees] = useState([]);
 
   const [assignments, setAssignments] = useState(() => {
     const initialAssignments = {};
@@ -43,6 +44,10 @@ export default function Home() {
     fetchEmployees();
   }, []);
 
+  useEffect(() => {
+    updateUnassignedEmployees();
+  }, [employees, assignments]);
+
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -57,9 +62,20 @@ export default function Home() {
     }
   };
 
+  const updateUnassignedEmployees = () => {
+    const assignedEmployeeIds = new Set();
+    Object.values(assignments).forEach(rotation =>
+      Object.values(rotation).forEach(empId => {
+        if (empId) assignedEmployeeIds.add(empId);
+      })
+    );
+
+    setUnassignedEmployees(employees.filter(emp => !assignedEmployeeIds.has(emp._id)));
+  };
+
   const handleRotationSelection = (rotation) => {
-    setTrainedRotations((prev) =>
-      prev.includes(rotation) ? prev.filter((r) => r !== rotation) : [...prev, rotation]
+    setTrainedRotations(prev =>
+      prev.includes(rotation) ? prev.filter(r => r !== rotation) : [...prev, rotation]
     );
   };
 
@@ -74,12 +90,7 @@ export default function Home() {
       const response = await fetch('/api/addEmployee', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          trainedRotations,
-          role,
-        }),
+        body: JSON.stringify({ firstName, lastName, trainedRotations, role }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -103,72 +114,70 @@ export default function Home() {
       const newTrainedRotations = checked
         ? [...updatedEmployee.trainedRotations, rotation]
         : updatedEmployee.trainedRotations.filter(r => r !== rotation);
-  
-      // If the new trained rotations array is empty, allow it to be empty
+
       const response = await fetch(`/api/updateEmployee/${employeeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          trainedRotations: newTrainedRotations.length > 0 ? newTrainedRotations : [],
-        }),
+        body: JSON.stringify({ trainedRotations: newTrainedRotations }),
       });
-  
+
       if (!response.ok) throw new Error('Failed to update employee.');
-  
-      // Refresh employees after update
       fetchEmployees();
     } catch (err) {
       console.error('Failed to update rotations:', err);
     }
   };
-  
-  
 
   const handleAssignmentChange = async (rotation, day, employeeId) => {
+    const previousAssignments = { ...assignments };
+    const prevEmployeeId = assignments[rotation]?.[day];
+
+    // Optimistically update assignments
     setAssignments(prev => ({
       ...prev,
-      [rotation]: {
-        ...prev[rotation],
-        [day]: employeeId || ''
-      }
+      [rotation]: { ...prev[rotation], [day]: employeeId || '' }
     }));
-  
+
+    // Optimistically update unassigned employees list
+    setUnassignedEmployees(prev => {
+      let updated = [...prev];
+      if (employeeId) updated = updated.filter(emp => emp._id !== employeeId);
+      if (prevEmployeeId && prevEmployeeId !== employeeId) {
+        const prevEmp = employees.find(emp => emp._id === prevEmployeeId);
+        if (prevEmp) updated.push(prevEmp);
+      }
+      return updated;
+    });
+
     try {
       const response = await fetch(`/api/updateAssignment`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rotation, day, employeeId }),
       });
-  
-      if (!response.ok) {
-        throw new Error('Failed to update assignment');
-      }
+
+      if (!response.ok) throw new Error('Failed to update assignment');
+
+      // After successful assignment update, re-calculate unassigned employees
+      updateUnassignedEmployees();
     } catch (err) {
       console.error('Error updating assignment:', err);
+      setAssignments(previousAssignments);
+      updateUnassignedEmployees();
     }
   };
-  
-
-  const getUnassignedEmployees = () => {
-    return employees.filter(employee => employee.assignedRotations.length === 0);
-  };
-  
-  
 
   const removeEmployee = async (employeeId) => {
     try {
-      const response = await fetch(`/api/removeEmployee/${employeeId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(`/api/removeEmployee/${employeeId}`, { method: 'DELETE' });
       const text = await response.text();
       if (!response.ok) {
         console.error('Error removing employee:', text);
         alert('Failed to remove employee. Please try again later.');
         return;
       }
-      setEmployees((prevEmployees) =>
-        prevEmployees.filter((emp) => emp._id !== employeeId)
-      );
+      setEmployees(prevEmployees => prevEmployees.filter(emp => emp._id !== employeeId));
+      updateUnassignedEmployees();
     } catch (err) {
       console.error('Error:', err);
       alert('Failed to remove employee. Please try again later.');
@@ -198,13 +207,14 @@ export default function Home() {
         handleRotationChange={handleRotationChange}
         removeEmployee={removeEmployee}
       />
-      <UnassignedEmployeesTable unassignedEmployees={getUnassignedEmployees()} />
+      <UnassignedEmployeesTable unassignedEmployees={unassignedEmployees} />
       <AssignmentGrid
         assignments={assignments}
         employees={employees}
         availableRotations={availableRotations}
         daysOfWeek={daysOfWeek}
         handleAssignmentChange={handleAssignmentChange}
+        setUnassignedEmployees={setUnassignedEmployees}
       />
     </div>
   );
