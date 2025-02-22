@@ -1,0 +1,51 @@
+/* Assignment Grid container */
+.assignment-grid-container {
+    margin-top: 20px;
+  }
+  
+  /* Section title styling */
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  /* Table styles for assignments */
+  .assignment-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .assignment-table th,
+  .assignment-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .assignment-table th {
+    background-color: #f4f4f4;
+  }
+  
+  /* Style for assignment select dropdowns */
+  .assignment-select {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  /* Additional styles for spacing */
+  .mt-4 {
+    margin-top: 1rem;
+  }
+  
+  .mt-10 {
+    margin-top: 2.5rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 1.5rem;
+  }
+  

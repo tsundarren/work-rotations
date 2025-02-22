@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { EmployeeCard } from './EmployeeCard';
+import '../styles/EmployeeList.css'; // Import the CSS file
 
 export const EmployeeList = ({ employees, setEmployees, availableRotations, handleRotationChange, removeEmployee }) => {
     const [openDropdown, setOpenDropdown] = useState(null);

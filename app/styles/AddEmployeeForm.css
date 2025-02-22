@@ -1,0 +1,102 @@
+/* AddEmployeeForm.css */
+
+/* Form container styles */
+.form-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .input-field {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+  }
+  
+  .submit-button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .submit-button:hover {
+    background-color: #2563eb;
+  }
+  
+  .error-text {
+    color: #ef4444;
+    margin-top: 0.5rem;
+  }
+  
+  /* Checkbox grid for selecting rotations */
+  .checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns */
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Dropdown for selecting role */
+  .role-dropdown {
+    margin-top: 1rem;
+  }
+  
+  .role-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .role-dropdown select {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 1rem;
+  }
+  
+  /* Ensure consistent input styling */
+  input[type="text"] {
+    font-size: 1rem;
+  }
+  
+  /* Style the form submit button */
+  .submit-button {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .submit-button:hover {
+    background-color: #2563eb;
+  }
+  
+  /* For mobile responsiveness, adjust checkbox grid */
+  @media (max-width: 640px) {
+    .checkbox-grid {
+      grid-template-columns: 1fr; /* Single column layout on small screens */
+    }
+  }
+  

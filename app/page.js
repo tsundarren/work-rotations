@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import './styles.css';
 
 import { AddEmployeeForm } from './components/AddEmployeeForm';
 import { EmployeeList } from './components/EmployeeList';
@@ -177,7 +176,6 @@ export default function Home() {
 
   return (
     <div className="container">
-      <h1 className="heading">Employee Rotation Assignment</h1>
       <AddEmployeeForm
         firstName={firstName}
         setFirstName={setFirstName}

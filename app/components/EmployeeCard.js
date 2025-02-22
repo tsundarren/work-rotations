@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../styles/EmployeeCard.css';
 
 export const EmployeeCard = ({
     employee,
@@ -30,16 +31,16 @@ export const EmployeeCard = ({
     const cardColor = roleColor[employee.role] || 'bg-yellow-500';
 
     const renderDropdownMenu = () => (
-        <div className="dropdown-overlay absolute bg-white shadow-lg z-20 mt-2 w-48 p-2 border rounded-md">
+        <div className="dropdown-overlay">
             <button
                 onClick={() => setEditingRotations(true)} // Show Edit Rotations menu
-                className="dropdown-option w-full text-left px-2 py-1 hover:bg-gray-200"
+                className="dropdown-option"
             >
                 Edit Rotations
             </button>
             <button
                 onClick={() => removeEmployee(employee._id)} // Remove Employee
-                className="dropdown-option w-full text-left px-2 py-1 hover:bg-red-200"
+                className="dropdown-option remove-employee"
             >
                 Remove Employee
             </button>
@@ -48,7 +49,7 @@ export const EmployeeCard = ({
                 <select
                     value={employee.role}
                     onChange={(e) => handleRoleChange(employee._id, e.target.value)}
-                    className="w-full text-left px-2 py-1"
+                    className="role-select"
                 >
                     {['Team Lead', 'Team Lead Coordinator', 'Supervisor', 'SPS', 'Senior SPS', 'Specimen Accessioner'].map((role) => (
                         <option key={role} value={role}>
@@ -61,9 +62,9 @@ export const EmployeeCard = ({
     );
 
     const renderRotationSelection = () => (
-        <div className="rotation-list absolute bg-white shadow-lg z-20 mt-2 w-48 p-2 border rounded-md">
+        <div className="rotation-list">
             {availableRotations.map((rotation) => (
-                <label key={rotation} className="flex items-center space-x-2 p-1">
+                <label key={rotation} className="rotation-item">
                     <input
                         type="checkbox"
                         checked={employee.trainedRotations.includes(rotation)}
@@ -74,7 +75,7 @@ export const EmployeeCard = ({
             ))}
             <button
                 onClick={() => setEditingRotations(false)} // Go back to main menu
-                className="dropdown-option bg-gray-200 hover:bg-gray-300 w-full p-1 mt-2 text-center rounded"
+                className="back-button"
             >
                 Back
             </button>
@@ -82,8 +83,8 @@ export const EmployeeCard = ({
     );
 
     return (
-        <li key={employee._id} className={`employee-card relative ${cardColor}`}>
-            <div className="employee-header flex justify-between items-center">
+        <li key={employee._id} className={`employee-card ${cardColor}`}>
+            <div className="employee-header">
                 <strong>{employee.firstName} {employee.lastName}</strong>
                 <button onClick={handleToggleDropdown} className="dropdown-button">
                     <span className={`dropdown-icon ${openDropdown === employee._id ? 'rotate' : ''}`}>▼</span>

@@ -1,4 +1,5 @@
 import React from "react";
+import '../styles/UnassignedEmployeesTable.css'; // Import the CSS file
 
 export const UnassignedEmployeesTable = ({ unassignedEmployees }) => {
   const renderUnassignedEmployees = () => {

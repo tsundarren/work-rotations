@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../styles/AssignmentGrid.css'; // Import the CSS file
 
 export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setUnassignedEmployees }) => {
   const [assignments, setAssignments] = useState({});
@@ -117,7 +118,7 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
   };
 
   return (
-    <div>
+    <div className="assignment-grid-container">
       <h2 className="section-title">Rotation Assignments</h2>
       <table className="assignment-table">
         <thead>
@@ -137,6 +138,7 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
                   <select
                     value={assignments[rotation]?.[day] || ''}
                     onChange={(e) => handleAssignmentChange(rotation, day, e.target.value)}
+                    className="assignment-select"
                   >
                     <option value="">Select Employee</option>
                     {employees

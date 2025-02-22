@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import '../styles/AddEmployeeForm.css'; // Import the CSS file
 
 export const AddEmployeeForm = ({
   firstName,

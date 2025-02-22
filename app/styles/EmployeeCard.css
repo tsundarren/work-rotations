@@ -1,0 +1,71 @@
+/* Employee Card Container */
+.employee-card {
+    @apply p-4 rounded-lg shadow-md mb-4 w-60 relative;
+  }
+  
+  /* Header section with employee name and dropdown button */
+  .employee-header {
+    @apply flex justify-between items-center;
+  }
+  
+  /* Dropdown button styles */
+  .dropdown-button {
+    @apply text-blue-500;
+  }
+  
+  /* Dropdown icon with rotation effect */
+  .dropdown-icon {
+    @apply transition-transform transform;
+  }
+  
+  .dropdown-icon.rotate {
+    @apply rotate-180;
+  }
+  
+  /* Dropdown menu overlay */
+  .dropdown-overlay {
+    @apply absolute bg-white shadow-lg z-20 mt-2 w-48 p-2 border rounded-md;
+  }
+  
+  /* Dropdown options */
+  .dropdown-option {
+    @apply w-full text-left px-2 py-1;
+  }
+  
+  .dropdown-option:hover {
+    @apply bg-gray-200;
+  }
+  
+  /* Remove employee button */
+  .remove-employee {
+    @apply text-red-500;
+  }
+  
+  .dropdown-option:hover.remove-employee {
+    @apply bg-red-200;
+  }
+  
+  /* Role selection dropdown */
+  .role-edit {
+    @apply mt-2;
+  }
+  
+  .role-edit select {
+    @apply w-full text-left px-2 py-1 border rounded;
+  }
+  
+  /* Rotation selection menu */
+  .rotation-list {
+    @apply absolute bg-white shadow-lg z-20 mt-2 w-48 p-2 border rounded-md;
+  }
+  
+  /* Individual rotation item */
+  .rotation-item {
+    @apply flex items-center space-x-2 p-1;
+  }
+  
+  /* Back button in rotation selection */
+  .rotation-list .dropdown-option {
+    @apply bg-gray-200 hover:bg-gray-300 w-full p-1 mt-2 text-center rounded;
+  }
+  
