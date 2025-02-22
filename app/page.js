@@ -1,19 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import Modal from './components/Modal';  // Import the Modal component
 import { AddEmployeeForm } from './components/AddEmployeeForm';
 import { EmployeeList } from './components/EmployeeList';
 import { UnassignedEmployeesTable } from './components/UnassignedEmployeesTable';
 import { AssignmentGrid } from './components/AssignmentGrid';
 
+// Define the available rotations and days of the week
 const availableRotations = [
   'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Prisma SPL', 'Prisma Tracking', 'Making Shipment Boxes', 
   'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen', 'Weights', 'TOUCH', 'Micro', 'Cyto', 'QFT', 
   'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'REF', 'Breath Bag/Novant/Pack up', 'PHC', 'Ref Match-Up', 'Floater', 
   'Biohazard', 'Clean Sweep', 'Imaging', 'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
 ];
-
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export default function Home() {
@@ -26,6 +26,7 @@ export default function Home() {
   const [role, setRole] = useState('');
   const [unassignedEmployees, setUnassignedEmployees] = useState([]);
   const [assignments, setAssignments] = useState(getInitialAssignments);
+  const [isModalOpen, setIsModalOpen] = useState(false);  // State to control modal visibility
 
   // Helper function to get initial assignments structure
   function getInitialAssignments() {
@@ -106,6 +107,14 @@ export default function Home() {
     }
   };
 
+  const openModal = () => {
+    setIsModalOpen(true);  // Open the modal
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);  // Close the modal
+  };
+
   const handleRotationChange = async (employeeId, rotation, checked) => {
     try {
       const updatedEmployee = employees.find(emp => emp._id === employeeId);
@@ -176,19 +185,28 @@ export default function Home() {
 
   return (
     <div className="container">
-      <AddEmployeeForm
-        firstName={firstName}
-        setFirstName={setFirstName}
-        lastName={lastName}
-        setLastName={setLastName}
-        trainedRotations={trainedRotations}
-        handleRotationSelection={handleRotationSelection}
-        handleSubmit={handleSubmit}
-        error={error}
-        availableRotations={availableRotations}
-        role={role}
-        setRole={setRole}
-      />
+      <button onClick={openModal} className="open-modal-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        <AddEmployeeForm
+          firstName={firstName}
+          setFirstName={setFirstName}
+          lastName={lastName}
+          setLastName={setLastName}
+          trainedRotations={trainedRotations}
+          handleRotationSelection={handleRotationSelection}
+          handleSubmit={handleSubmit}
+          error={error}
+          availableRotations={availableRotations}
+          role={role}
+          setRole={setRole}
+        />
+      </Modal>
+
       <EmployeeList
         employees={employees}
         setEmployees={setEmployees}
