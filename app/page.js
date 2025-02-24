@@ -9,9 +9,9 @@ import { AssignmentGrid } from './components/AssignmentGrid';
 
 // Define the available rotations and days of the week
 const availableRotations = [
-  'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Prisma SPL', 'Prisma Tracking', 'Making Shipment Boxes', 
+  'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Manual 2/Pack-up', 'Prisma SPL', 'Prisma Tracking', 'Making Shipment Boxes', 
   'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen', 'Weights', 'TOUCH', 'Micro', 'Cyto', 'QFT', 
-  'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'REF', 'Breath Bag/Novant/Pack up', 'PHC', 'Ref Match-Up', 'Floater', 
+  'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'Frozen Helper', 'REF', 'Breath Bag/Novant/Pack up', 'PHC', 'Ref Match-Up', 'Floater', 
   'Biohazard', 'Clean Sweep', 'Imaging', 'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
 ];
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
