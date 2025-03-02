@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../styles/AssignmentGrid.css'; // Import the CSS file
 
-export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setUnassignedEmployees }) => {
+export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) => {
   const [assignments, setAssignments] = useState({});
 
   useEffect(() => {
@@ -13,7 +13,6 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
         if (response.ok) {
           const formattedAssignments = formatAssignments(data);
           setAssignments(formattedAssignments);
-          updateUnassignedEmployees(formattedAssignments);
         }
       } catch (error) {
         console.error('Error fetching assignments:', error);
@@ -21,7 +20,7 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
     };
 
     fetchAssignments();
-  }, [employees, setUnassignedEmployees]);
+  }, [employees]);
 
   const formatAssignments = (data) => {
     const formatted = {};
@@ -34,23 +33,8 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
     return formatted;
   };
 
-  const updateUnassignedEmployees = (formattedAssignments) => {
-    const assignedEmployeeIds = new Set();
-    Object.values(formattedAssignments).forEach((dayAssignments) => {
-      Object.values(dayAssignments).forEach((employeeIds) => {
-        employeeIds.forEach((id) => assignedEmployeeIds.add(id));
-      });
-    });
-
-    const unassignedEmployees = employees.filter(
-      (employee) => !assignedEmployeeIds.has(employee._id)
-    );
-    setUnassignedEmployees(unassignedEmployees);
-  };
-
   const handleAssignmentChange = async (rotation, day, employeeId) => {
     const previousAssignments = { ...assignments };
-    const prevEmployeeId = assignments[rotation]?.[day];
 
     // Optimistic UI update
     setAssignments((prev) => ({
@@ -60,8 +44,6 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
         [day]: employeeId || '',
       },
     }));
-
-    setUnassignedEmployees(updateUnassignedEmployeeList(employeeId, prevEmployeeId));
 
     const updatedData = {
       [rotation]: {
@@ -84,31 +66,10 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek, setU
       const updatedAssignmentsData = await fetchAssignmentsFromAPI();
       const formattedAssignments = formatAssignments(updatedAssignmentsData);
       setAssignments(formattedAssignments);
-      updateUnassignedEmployees(formattedAssignments);
     } catch (error) {
       console.error('Error updating assignments:', error);
       setAssignments(previousAssignments);
-      setUnassignedEmployees(updateUnassignedEmployeeList(employeeId, prevEmployeeId, true));
     }
-  };
-
-  const updateUnassignedEmployeeList = (employeeId, prevEmployeeId, revert = false) => {
-    let updatedEmployees = [...employees];
-
-    if (employeeId) {
-      updatedEmployees = updatedEmployees.filter((emp) => emp._id !== employeeId);
-    }
-
-    if (prevEmployeeId && prevEmployeeId !== employeeId) {
-      const prevEmployee = employees.find((emp) => emp._id === prevEmployeeId);
-      if (prevEmployee) updatedEmployees.push(prevEmployee);
-    }
-
-    if (revert && prevEmployeeId) {
-      updatedEmployees = updatedEmployees.filter((emp) => emp._id !== prevEmployeeId);
-    }
-
-    return updatedEmployees;
   };
 
   const fetchAssignmentsFromAPI = async () => {

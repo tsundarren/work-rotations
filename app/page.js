@@ -4,17 +4,21 @@ import { useState, useEffect } from 'react';
 import Modal from './components/Modal';  // Import the Modal component
 import { AddEmployeeForm } from './components/AddEmployeeForm';
 import { EmployeeList } from './components/EmployeeList';
-import { UnassignedEmployeesTable } from './components/UnassignedEmployeesTable';
 import { AssignmentGrid } from './components/AssignmentGrid';
 
 // Define the available rotations and days of the week
 const availableRotations = [
   'BN', 'Expeditor', 'Blue Bag', 'Manual 1', 'Manual 2/Pack-up', 'Prisma SPL', 'Prisma Tracking', 'Making Shipment Boxes', 
-  'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen', 'Weights', 'TOUCH', 'Micro', 'Cyto', 'QFT', 
+  'Setting Up BN Shipment', 'Prisma TOUCH', 'Prisma Frozen', 'Weights', 'TOUCH', 'Micro', 'Cyto 1', 'Cyto 2', 'QFT', 
   'SPN/SORT/SCAN', 'Histo/Frozens Matchup', 'Frozen Helper', 'REF', 'Breath Bag/Novant/Pack up', 'PHC', 'Ref Match-Up', 'Floater', 
   'Biohazard', 'Clean Sweep', 'Imaging', 'Nightly Report', 'Verify BN IRR', 'DST/LAB-IN-THE BOX', 'Schedule Board', 'Disinfection Log'
 ];
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+const groupedRotations = {
+  Manual: ['Manual 1', 'Manual 2/Pack-up'],
+  Cyto: ['Cyto 1', 'Cyto 2'],
+};
 
 export default function Home() {
   const [firstName, setFirstName] = useState('');
@@ -24,7 +28,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [role, setRole] = useState('');
-  const [unassignedEmployees, setUnassignedEmployees] = useState([]);
   const [assignments, setAssignments] = useState(getInitialAssignments);
   const [isModalOpen, setIsModalOpen] = useState(false);  // State to control modal visibility
 
@@ -44,10 +47,6 @@ export default function Home() {
     fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    updateUnassignedEmployees();
-  }, [employees, assignments]);
-
   const fetchEmployees = async () => {
     try {
       setLoading(true);
@@ -60,16 +59,6 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateUnassignedEmployees = () => {
-    const assignedEmployeeIds = new Set();
-    Object.values(assignments).forEach(rotation =>
-      Object.values(rotation).forEach(empId => {
-        if (empId) assignedEmployeeIds.add(empId);
-      })
-    );
-    setUnassignedEmployees(employees.filter(emp => !assignedEmployeeIds.has(emp._id)));
   };
 
   const handleRotationSelection = (rotation) => {
@@ -135,24 +124,12 @@ export default function Home() {
 
   const handleAssignmentChange = async (rotation, day, employeeId) => {
     const previousAssignments = { ...assignments };
-    const prevEmployeeId = assignments[rotation]?.[day];
 
     // Optimistically update assignments
     setAssignments(prev => ({
       ...prev,
       [rotation]: { ...prev[rotation], [day]: employeeId || '' }
     }));
-
-    // Optimistically update unassigned employees list
-    setUnassignedEmployees(prev => {
-      let updated = [...prev];
-      if (employeeId) updated = updated.filter(emp => emp._id !== employeeId);
-      if (prevEmployeeId && prevEmployeeId !== employeeId) {
-        const prevEmp = employees.find(emp => emp._id === prevEmployeeId);
-        if (prevEmp) updated.push(prevEmp);
-      }
-      return updated;
-    });
 
     try {
       const response = await fetch(`/api/updateAssignment`, {
@@ -162,12 +139,9 @@ export default function Home() {
       });
 
       if (!response.ok) throw new Error('Failed to update assignment');
-
-      updateUnassignedEmployees();
     } catch (err) {
       console.error('Error updating assignment:', err);
       setAssignments(previousAssignments);
-      updateUnassignedEmployees();
     }
   };
 
@@ -176,7 +150,6 @@ export default function Home() {
       const response = await fetch(`/api/removeEmployee/${employeeId}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to remove employee.');
       setEmployees(prev => prev.filter(emp => emp._id !== employeeId));
-      updateUnassignedEmployees();
     } catch (err) {
       console.error('Error:', err);
       alert('Failed to remove employee. Please try again later.');
@@ -214,14 +187,14 @@ export default function Home() {
         handleRotationChange={handleRotationChange}
         removeEmployee={removeEmployee}
       />
-      <UnassignedEmployeesTable unassignedEmployees={unassignedEmployees} />
+
       <AssignmentGrid
         assignments={assignments}
         employees={employees}
         availableRotations={availableRotations}
         daysOfWeek={daysOfWeek}
         handleAssignmentChange={handleAssignmentChange}
-        setUnassignedEmployees={setUnassignedEmployees}
+        groupedRotations={groupedRotations}
       />
     </div>
   );
