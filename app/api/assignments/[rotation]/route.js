@@ -3,7 +3,7 @@ import Assignment from '@/models/Assignment';
 import Employee from '@/models/Employee';
 
 export async function PATCH(req, { params }) {
-  const { rotation } = params;
+  const { rotation } = await params;
   const { assignments } = await req.json();
 
   try {

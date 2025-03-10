@@ -89,11 +89,11 @@ export const EmployeeCard = ({
 
                 {/* Display Exclamation Mark if Unassigned */}
                 {employee.assignedRotations.length === 0 && (
-                    <span className="unassigned-icon" title="Unassigned">❗</span>
+                <span className="unassigned-icon" title="Unassigned">❗</span>
                 )}
 
                 <button onClick={handleToggleDropdown} className="dropdown-button">
-                    <span className={`dropdown-icon ${openDropdown === employee._id ? 'rotate' : ''}`}>▼</span>
+                <span className={`dropdown-icon ${openDropdown === employee._id ? 'rotate' : ''}`}>▼</span>
                 </button>
             </div>
 

@@ -191,6 +191,7 @@ export default function Home() {
       <AssignmentGrid
         assignments={assignments}
         employees={employees}
+        setEmployees={setEmployees}
         availableRotations={availableRotations}
         daysOfWeek={daysOfWeek}
         handleAssignmentChange={handleAssignmentChange}

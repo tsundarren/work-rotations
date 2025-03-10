@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import '../styles/AssignmentGrid.css'; // Import the CSS file
 
-export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) => {
+export const AssignmentGrid = ({ employees, setEmployees, availableRotations, daysOfWeek }) => {
   const [assignments, setAssignments] = useState({});
 
   useEffect(() => {
@@ -35,40 +35,67 @@ export const AssignmentGrid = ({ employees, availableRotations, daysOfWeek }) =>
 
   const handleAssignmentChange = async (rotation, day, employeeId) => {
     const previousAssignments = { ...assignments };
+    const previousEmployees = [...employees]; // Store the current employees list
 
-    // Optimistic UI update
-    setAssignments((prev) => ({
-      ...prev,
-      [rotation]: {
-        ...prev[rotation],
-        [day]: employeeId || '',
-      },
-    }));
-
-    const updatedData = {
+    // Optimistically update assignments
+    const newAssignments = {
+      ...assignments,
       [rotation]: {
         ...assignments[rotation],
-        [day]: employeeId,
+        [day]: employeeId || '', // Employee ID or empty if unassigned
       },
     };
 
+    setAssignments(newAssignments);
+
+    // Update the employee's assigned rotations
+    const updatedEmployees = employees.map((employee) => {
+      if (employee._id === employeeId) {
+        const updatedAssignedRotations = employee.assignedRotations.includes(rotation)
+          ? employee.assignedRotations.filter((r) => r !== rotation)  // Remove rotation if unassigning
+          : [...employee.assignedRotations, rotation]; // Add rotation if assigning
+
+        return {
+          ...employee,
+          assignedRotations: updatedAssignedRotations,
+        };
+      } else if (employee.assignedRotations.includes(rotation) && employeeId === '') {
+        // If employee is being removed from the rotation, remove it from their assigned rotations
+        const updatedAssignedRotations = employee.assignedRotations.filter((r) => r !== rotation);
+        return {
+          ...employee,
+          assignedRotations: updatedAssignedRotations,
+        };
+      }
+      return employee;
+    });
+
+    // Update the state with the optimistically changed employees list
+    setEmployees(updatedEmployees);
+
     try {
+      // Make the API request to update the assignment in the backend
       const response = await fetch(`/api/assignments/${rotation}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ assignments: updatedData }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignments: newAssignments,
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to update assignments');
+      if (!response.ok) {
+        throw new Error('Failed to update assignment');
+      }
 
-      const updatedAssignmentsData = await fetchAssignmentsFromAPI();
-      const formattedAssignments = formatAssignments(updatedAssignmentsData);
-      setAssignments(formattedAssignments);
-    } catch (error) {
-      console.error('Error updating assignments:', error);
+      // Optionally, refetch the assignments if needed
+      const updatedData = await fetchAssignmentsFromAPI();
+      setAssignments(formatAssignments(updatedData));
+    } catch (err) {
+      console.error('Error updating assignment:', err);
+
+      // Rollback the optimistic UI changes if API request fails
       setAssignments(previousAssignments);
+      setEmployees(previousEmployees);
     }
   };
 
