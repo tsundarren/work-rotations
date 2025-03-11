@@ -5,6 +5,7 @@ import Modal from './components/Modal';  // Import the Modal component
 import { AddEmployeeForm } from './components/AddEmployeeForm';
 import { EmployeeList } from './components/EmployeeList';
 import { AssignmentGrid } from './components/AssignmentGrid';
+import { useAssignments } from './hooks/useAssignments'; // Import the custom hook
 
 // Define the available rotations and days of the week
 const availableRotations = [
@@ -28,20 +29,10 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [role, setRole] = useState('');
-  const [assignments, setAssignments] = useState(getInitialAssignments);
   const [isModalOpen, setIsModalOpen] = useState(false);  // State to control modal visibility
 
-  // Helper function to get initial assignments structure
-  function getInitialAssignments() {
-    const initialAssignments = {};
-    availableRotations.forEach(rotation => {
-      initialAssignments[rotation] = daysOfWeek.reduce((acc, day) => {
-        acc[day] = '';
-        return acc;
-      }, {});
-    });
-    return initialAssignments;
-  }
+  // Fetch and manage assignments using the custom hook
+  const { assignments, handleAssignmentChange } = useAssignments(employees, availableRotations, daysOfWeek);
 
   useEffect(() => {
     fetchEmployees();
@@ -119,29 +110,6 @@ export default function Home() {
       fetchEmployees();
     } catch (err) {
       console.error('Failed to update rotations:', err);
-    }
-  };
-
-  const handleAssignmentChange = async (rotation, day, employeeId) => {
-    const previousAssignments = { ...assignments };
-
-    // Optimistically update assignments
-    setAssignments(prev => ({
-      ...prev,
-      [rotation]: { ...prev[rotation], [day]: employeeId || '' }
-    }));
-
-    try {
-      const response = await fetch(`/api/updateAssignment`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rotation, day, employeeId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update assignment');
-    } catch (err) {
-      console.error('Error updating assignment:', err);
-      setAssignments(previousAssignments);
     }
   };
 
