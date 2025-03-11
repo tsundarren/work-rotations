@@ -48,30 +48,34 @@ export const AssignmentGrid = ({ employees, setEmployees, availableRotations, da
 
     setAssignments(newAssignments);
 
-    // Update the employee's assigned rotations
-    const updatedEmployees = employees.map((employee) => {
-      if (employee._id === employeeId) {
-        const updatedAssignedRotations = employee.assignedRotations.includes(rotation)
-          ? employee.assignedRotations.filter((r) => r !== rotation)  // Remove rotation if unassigning
-          : [...employee.assignedRotations, rotation]; // Add rotation if assigning
+    // Update the employee's assigned rotations optimistically
+    setEmployees((prevEmployees) =>
+      prevEmployees.map((employee) => {
+        if (employee._id === employeeId) {
+          let updatedAssignedRotations = employee.assignedRotations.includes(rotation)
+            ? employee.assignedRotations.filter((r) => r !== rotation) // Remove rotation if unassigning
+            : [...employee.assignedRotations, rotation]; // Add rotation if assigning
 
-        return {
-          ...employee,
-          assignedRotations: updatedAssignedRotations,
-        };
-      } else if (employee.assignedRotations.includes(rotation) && employeeId === '') {
-        // If employee is being removed from the rotation, remove it from their assigned rotations
-        const updatedAssignedRotations = employee.assignedRotations.filter((r) => r !== rotation);
-        return {
-          ...employee,
-          assignedRotations: updatedAssignedRotations,
-        };
-      }
-      return employee;
-    });
+          console.log(`Updating ${employee.firstName} ${employee.lastName} - New Assigned Rotations:`, updatedAssignedRotations);
 
-    // Update the state with the optimistically changed employees list
-    setEmployees(updatedEmployees);
+          return {
+            ...employee,
+            assignedRotations: updatedAssignedRotations.length > 0 ? updatedAssignedRotations : [], // Ensure empty array if all removed
+          };
+        }
+
+        // Handle case where an employee is being removed from the rotation
+        if (employee.assignedRotations.includes(rotation) && employeeId === '') {
+          const updatedAssignedRotations = employee.assignedRotations.filter((r) => r !== rotation);
+          return {
+            ...employee,
+            assignedRotations: updatedAssignedRotations.length > 0 ? updatedAssignedRotations : [],
+          };
+        }
+
+        return employee;
+      })
+    );
 
     try {
       // Make the API request to update the assignment in the backend
