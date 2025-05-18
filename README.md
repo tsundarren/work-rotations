@@ -11,9 +11,8 @@
 - Training and role-based assignments
 - Deployed on Vercel
 
-## 🔗 Live Demo
-
-![Work Rotation App Demo](https://i.imgur.com/Z3GJ9ox.png)
+## 🔗 Preview
+![Work Rotation App Preview](https://i.imgur.com/Z3GJ9ox.png)
 
 ## ℹ️ Overview
 
